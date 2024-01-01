@@ -6,16 +6,20 @@ import yfinance as yf
 import seaborn as sns
 import warnings
 import matplotlib.pyplot as plt
+import os
+import numpy as np
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 warnings.filterwarnings("ignore", category=UserWarning)
 
+#DIVISAS
 LISTA_STOCKS = ['EURUSD=X',
                 'GBPUSD=X',
                 'USDJPY=X',
                 'USDCAD=X',
                 'NZDUSD=X']
 
+#CRIPTOMONEDAS
 LISTA_STOCKS = ['BTC-EUR',
                 'ETH-EUR',
                 'USDT-EUR',
@@ -35,17 +39,41 @@ LISTA_STOCKS = ['BTC-EUR',
                 'ATOM-USD',
                 'UNI7083-USD']
 
-
-"""LISTA_STOCKS = ['BTC-EUR',
-                'ETH-EUR']"""
-"""
+#ACCIONES AMERICANAS
 LISTA_STOCKS = ['GOOGL',
                 'TSLA',
                 'AMZN',
                 'NVDA',
                 'PFE',
                 'AMD',
-                'NIO']"""
+                'NIO']
+
+#TODAS MEMOS LAS DIVISAS
+LISTA_STOCKS = ['BTC-EUR',
+                'ETH-EUR',
+                'USDT-EUR',
+                'BNB-EUR',
+                'SOL-EUR',
+                'USDC-EUR',
+                'ADA-EUR',
+                'DOGE-EUR',
+                'AVAX-EUR',
+                'TRX-EUR',
+                'LINK-EUR',
+                'DOT-EUR',
+                'MATIC-EUR',
+                'LTC-EUR',
+                'DAI-USD',
+                'BCH-USD',
+                'ATOM-USD',
+                'UNI7083-USD',
+                'GOOGL',
+                'TSLA',
+                'AMZN',
+                'NVDA',
+                'PFE',
+                'AMD',
+                'NIO']
 
 
 
@@ -65,16 +93,30 @@ class Oscillator(Strategy):
     def next(self):
       price = self.data.Close[-1]
 
-      if crossover(self.rsi,self.upper_bound):
+      if crossover(self.rsi,self.upper_bound) and not self.position.is_long:
         self.buy()
-      elif self.position.is_long and self.data.Close < self.sar:
+      elif self.position.is_long and self.data.Close < self.sar and self.position.pl > 0:
         self.position.close()
 
-      elif crossover(self.lower_bound,self.rsi):
-        self.sell()
-      elif self.position.is_short and self.data.Close > self.sar:
+      elif crossover(self.lower_bound,self.rsi) and not self.position.is_short:
+        pass#self.sell()  #LOS RESULTADOS SON MEJORES SI SOLO JUGAMOS EN LARGO
+      elif self.position.is_short and self.data.Close > self.sar and self.position.pl < 0:
         self.position.close()
 
+def borrar_archivos_en_carpeta(direccion_carpeta):
+    try:
+        # Obtener la lista de archivos en la carpeta
+        archivos_en_carpeta = os.listdir(direccion_carpeta)
+        # Iterar sobre la lista y borrar cada archivo
+        for archivo in archivos_en_carpeta:
+            ruta_archivo = os.path.join(direccion_carpeta, archivo)
+            if os.path.isfile(ruta_archivo):
+                os.remove(ruta_archivo)
+                print(f'Archivo borrado: {archivo}')
+
+        print(f'Todos los archivos en {direccion_carpeta} han sido borrados.')
+    except Exception as e:
+        print(f'Ocurrió un error: {e}')
       
 def analiza_stock(stock_ticker,
                   print_stats=False,
@@ -93,11 +135,15 @@ def analiza_stock(stock_ticker,
     return_ann = stats['Return (Ann.) [%]']
     exposure = stats['Exposure Time [%]']
     win_rate = stats['Win Rate [%]']
+    if np.isnan(win_rate):
+      win_rate = 50 
     trades = stats['# Trades']
     print(f"Return (Ann.) [%] \t{return_ann}")
     print(f"Exposure Time [%] \t{exposure}")
     print(f"Win Rate [%] \t\t{win_rate}") 
     print(f"# Trades \t\t{trades}")
+
+    bt.plot(filename=f"/home/ubuntu/backtest/html/{stock_ticker}.html")
 
 
     if optimize:
@@ -118,6 +164,9 @@ def analiza_stock(stock_ticker,
         plt.clf()
     
     return return_ann, exposure, win_rate, trades
+
+borrar_archivos_en_carpeta("/home/ubuntu/backtest/html")
+borrar_archivos_en_carpeta("/home/ubuntu/backtest/img")
 
 for stock_ticker in LISTA_STOCKS:
     return_ann, exposure, win_rate, trades = analiza_stock(stock_ticker)
