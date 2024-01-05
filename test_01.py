@@ -46,7 +46,14 @@ LISTA_STOCKS = ['GOOGL',
                 'NVDA',
                 'PFE',
                 'AMD',
-                'NIO']
+                'NIO',
+                'AAPL',
+                'MSFT',
+                'META',
+                'INTC',
+                'PYPL',
+                'NFLX',
+                'CSCO']
 
 #TODAS MEMOS LAS DIVISAS
 LISTA_STOCKS = ['BTC-EUR',
@@ -73,7 +80,19 @@ LISTA_STOCKS = ['BTC-EUR',
                 'NVDA',
                 'PFE',
                 'AMD',
-                'NIO']
+                'NIO',
+                'AAPL',
+                'MSFT',
+                'META',
+                'INTC',
+                'PYPL',
+                'NFLX',
+                'CSCO']
+
+
+"""LISTA_STOCKS = ['TEF',
+                'SAN',
+                'ENG']"""
 
 
 
@@ -123,7 +142,7 @@ def analiza_stock(stock_ticker,
                   optimize=False,
                   print_optimize=False):
     
-    stock = yf.download(stock_ticker,start='2010-12-01',end='2023-01-01')#stock = yf.download(stock_ticker,start='2013-01-01',end='2023-01-01')
+    stock = yf.download(stock_ticker,start='2010-01-01',end='2024-01-01')#stock = yf.download(stock_ticker,start='2013-01-01',end='2023-01-01')
     #print(stock.tail())
 
     bt = Backtest(stock, Oscillator, cash=10_000, commission=.002)
@@ -148,7 +167,7 @@ def analiza_stock(stock_ticker,
 
     if optimize:
         stats, heatmap = bt.optimize(
-                            upper_bound=range(60, 80, 1),
+                            upper_bound=range(50, 80, 1),
                             lower_bound=range(20, 40, 1),
                             maximize='Return (Ann.) [%]',
                             constraint=lambda param: param.lower_bound < param.upper_bound,
@@ -160,7 +179,7 @@ def analiza_stock(stock_ticker,
 
         hm = heatmap.groupby(['lower_bound', 'upper_bound']).mean().unstack()
         sns.heatmap(hm[::-1], cmap='bwr')
-        plt.savefig(f"img/{stock_ticker}.png")
+        plt.savefig(f"/home/ubuntu/backtest/img/{stock_ticker}.png")
         plt.clf()
     
     return return_ann, exposure, win_rate, trades
